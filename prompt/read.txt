@@ -1,0 +1,3 @@
+This user has readed [HistoryHere] in the previous. Please predict the next book this user will play. The book title candidates are [CansHere]. Choose only one book from the candidates. The answer is 
+This user has readed [HistoryHere] in the previous. Given the following 20 book titles, [CansHere], recommend one book for this user to play next. The book title you recommend is 
+The visit history of this user is [HistoryHere]. Recommend a next book for this user to read from the following book title set, [CansHere]. The recommendation should contain one book title only. The recommendation is 
