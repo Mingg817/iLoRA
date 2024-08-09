@@ -53,3 +53,7 @@ sh test_steam.sh
 ```
 
 Test iLoRA with a single A100 GPU on LastFM dataset:
+
+```
+sh test_lastfm.sh
+```
