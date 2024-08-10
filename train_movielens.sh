@@ -1,6 +1,6 @@
 python main.py \
 --mode train \
--router share \
+--router share \
 --gating Dense \
 --batch_size 8 \
 --accumulate_grad_batches 16 \
