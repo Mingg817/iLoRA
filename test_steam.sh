@@ -9,7 +9,7 @@ python train.py \
 --cans_num 20 \
 --prompt_path ./prompt/game.txt \
 --rec_embed SASRec \
---llm_tuning lora \
+--llm_tuning moelora \
 --llm_path xxx \
 --rec_model_path ./rec_model/steam.pt \
 --ckpt_path ./checkpoints/steam.ckpt \
