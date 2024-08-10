@@ -1,4 +1,4 @@
-python train.py \
+python main.py \
 --mode test \
 --router share \
 --gating Dense \
