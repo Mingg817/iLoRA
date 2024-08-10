@@ -12,7 +12,7 @@ python train.py \
 --llm_tuning moelora \
 --llm_path xxx \
 --rec_model_path ./rec_model/lastfm.pt \
---ckpt_dir ./checkpoints/lastfm/ \
+--ckpt_path ./checkpoints/lastfm.ckpt \
 --output_dir ./output/lastfm/ \
 --log_dir lastfm_logs \
 --lr_warmup_start_lr 7e-6 \
