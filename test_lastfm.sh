@@ -1,5 +1,5 @@
 python train.py \
---mode trai
+--mode test \
 --router share \
 --gating Dense \
 --batch_size 8 \
