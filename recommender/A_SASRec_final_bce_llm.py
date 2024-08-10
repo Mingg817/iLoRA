@@ -10,7 +10,6 @@ import time as Time
 from collections import Counter
 from SASRecModules_ori import *
 
-# 从data中提取特定元素, 堆叠成一个新张量, 用于提取最后一个prediction
 def extract_axis_1(data, indices):
     res = []
     for i in range(data.shape[0]):
@@ -200,32 +199,23 @@ class SASRec(nn.Module):
         supervised_output = self.s_fc(state_hidden).squeeze()
         return supervised_output
     
-    # 根据输入seq, 得到next prediction的embedding
-    # states: 包含一批数据的状态的张量; len_states: 包含一批数据的状态长度的张量
     def cacul_h(self, states, len_states):
-        device = self.device  # 设定目标设备，比如'cpu'或'cuda'
+        device = self.device  
         states = states.to(device)
         inputs_emb = self.item_embeddings(states)
-        # 引入顺序信息
         inputs_emb += self.positional_embeddings(torch.arange(self.state_size).to(self.device))
-        # 防止过拟合
         seq = self.emb_dropout(inputs_emb)
-        # 创建掩码
         mask = torch.ne(states, self.item_num).float().unsqueeze(-1).to(self.device)
         seq *= mask
-        # 归一化和多头注意力
         seq_normalized = self.ln_1(seq)
         mh_attn_out = self.mh_attn(seq_normalized, seq)
-        # 送入前馈网络
         ff_out = self.feed_forward(self.ln_2(mh_attn_out))
         ff_out *= mask
         ff_out = self.ln_3(ff_out)
-        # 提取最终状态
         state_hidden = extract_axis_1(ff_out, len_states - 1)
         # print("state_hidden.size", state_hidden.size())
         return state_hidden
     
-    # 得到单个item的embedding
     def cacu_x(self, x):
         x = self.item_embeddings(x)
 
