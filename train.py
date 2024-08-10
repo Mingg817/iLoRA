@@ -11,10 +11,8 @@ from recommender.A_SASRec_final_bce_llm import SASRec, Caser, GRU
 from SASRecModules_ori import *
 from transformers import LlamaForCausalLM, LlamaTokenizer
 
-# 回调函数
 def load_callbacks(args):
     callbacks = []
-    # EarlyStopping: 训练过程的monitor='metric'停止改进时停止训练
     callbacks.append(plc.EarlyStopping(
         monitor='metric',
         mode='max',
@@ -22,7 +20,6 @@ def load_callbacks(args):
         min_delta=0.001
     ))
 
-    # ModelCheckpoint: 每个训练周期结束保存模型检查点
     callbacks.append(plc.ModelCheckpoint(
         monitor='metric',
         dirpath=args.ckpt_dir,
@@ -34,7 +31,6 @@ def load_callbacks(args):
         every_n_epochs=1
     ))
     
-    # LearningRateMonitor: 每个训练步骤结束记录当前lr学习率
     if args.lr_scheduler:
         callbacks.append(plc.LearningRateMonitor(
             logging_interval='step'))
@@ -42,32 +38,24 @@ def load_callbacks(args):
 
 def main(args):
     pl.seed_everything(args.seed)
-    # 创建MInterface模型实例, 将args转化为字典并传入
     model = MInterface(**vars(args))
-    # 若检查点存在, 加载模型检查点
     if args.ckpt_path:
         ckpt = torch.load(args.ckpt_path, map_location='cpu')
 
         model.load_state_dict(ckpt['state_dict'], strict=False)
         print("load checkpoints from {}".format(args.ckpt_path))
 
-    # 创建DInterface模型实例
     data_module = DInterface(llm_tokenizer=model.llama_tokenizer,**vars(args))
 
-    # 计算最大步数args.max_steps
     args.max_steps=len(data_module.trainset) * args.max_epochs // (args.accumulate_grad_batches * args.batch_size)
-    
-    # 创建TensorBoardLogger实例, 记录训练过程
     logger = TensorBoardLogger(save_dir='./log/', name=args.log_dir)
     args.callbacks = load_callbacks(args)
     args.logger = logger
     if not os.path.exists(args.ckpt_dir):
         os.makedirs(args.ckpt_dir)
 
-    # 创建Trainer实例 -> 训练, 验证, 测试
     trainer = Trainer.from_argparse_args(args)
 
-    # 设定学习率: 若auto_lr_find, 自动寻找最优学习率
     if args.auto_lr_find:
         lr_finder=trainer.tuner.lr_find(model=model, datamodule=data_module, min_lr=1e-10, max_lr=1e-3, num_training=100)
         fig=lr_finder.plot(suggest=True)
@@ -76,16 +64,13 @@ def main(args):
         print("Saving to {}".format(fig_path))
         model.hparams.lr=lr_finder.suggestion()
 
-    # 若train -> 调用trainer.fit训练
     if args.mode == 'train':
         trainer.fit(model=model, datamodule=data_module)
     else:
-    # 否则 -> 调用trainer.test测试
         trainer.test(model=model, datamodule=data_module)
 
 
 if __name__ == '__main__':
-    # spawn启动方法
     torch.multiprocessing.set_start_method('spawn')
     parser = ArgumentParser()
 
