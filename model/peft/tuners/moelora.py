@@ -192,7 +192,6 @@ class MoeLoraModel(torch.nn.Module):
         self.gate_weights = []
         self.add_adapter(adapter_name, self.peft_config[adapter_name])
     
-    # 重写forward函数-> global_role_embd存储最新pop的role_embeds,
     def forward(self, **kwargs):        
         self.global_user_embeds.clear()
         user_embeds = kwargs['user_embeds']
@@ -216,15 +215,6 @@ class MoeLoraModel(torch.nn.Module):
         self.gate_weights.extend([gate_weights])
         
         return self.self_model_generate(**kwargs)
-        # return self.model.generate(**kwargs)
-    
-    """# !!!
-    def generate(self, **kwargs):
-        self.global_user_embeds.clear()
-        user_embeds = kwargs['user_embeds']
-        self.global_user_embeds.extend([user_embeds])
-        return self.self_model_generate(**kwargs)
-        # return self.model.generate(**kwargs)"""
     
     def add_adapter(self, adapter_name, config=None):
         if config is not None:
@@ -280,7 +270,6 @@ class MoeLoraModel(torch.nn.Module):
         kwargs = {
             "r": moelora_config.r,
 
-            # moe额外参数
             "num_moe": moelora_config.num_moe,
             "gating": moelora_config.gating,
             "global_user_embeds": self.global_user_embeds,
@@ -400,9 +389,7 @@ class MoeLoraModel(torch.nn.Module):
                 f"Please check the target modules and try again."
             )
 
-    # parent_module=parent父模型, child_name=target_name父模型的子模块名, new_module=new_module, old_module=target
     def _replace_module(self, parent_module, child_name, new_module, old_module):
-        # new_module的值 -> parent_module的child_name属性
         setattr(parent_module, child_name, new_module)
         new_module.weight = old_module.weight
         if hasattr(old_module, "bias"):
@@ -418,7 +405,6 @@ class MoeLoraModel(torch.nn.Module):
             if "lora_" in name:
                 module.to(old_module.weight.device)
             
-            # moe额外
             if "gating" in name:
                 module.to(old_module.weight.device)
 
@@ -583,12 +569,10 @@ def mark_only_lora_as_trainable(model: nn.Module, bias: str = "none") -> None:
         raise NotImplementedError
 
 
-# MoeLoRALayer !!!
 class MoeLoraLayer:
     def __init__(self, in_features: int, out_features: int, **kwargs):
         self.r = {}
         
-        # 新增num_moe
         self.num_moe = {}
         
         self.lora_alpha = {}
@@ -597,7 +581,6 @@ class MoeLoraLayer:
         self.lora_A = nn.ModuleDict({})
         self.lora_B = nn.ModuleDict({})
         
-        # 新增gating
         self.gating = nn.ModuleDict({})
         
         # For Embedding layer
@@ -614,12 +597,10 @@ class MoeLoraLayer:
                      init_lora_weights):
         self.r[adapter_name] = r
         
-        # 设置num_moe
         self.num_moe[adapter_name] = num_moe
         
         self.lora_alpha[adapter_name] = lora_alpha
         
-        # !!!新增gating
         self.gating.update(
             nn.ModuleDict({adapter_name: GATING_TO_MODEL_MAPPING[gating](num_moe=num_moe, dim=self.in_features)}))
         self.gating[adapter_name].to(self.weight.device)
@@ -731,9 +712,7 @@ class Linear(nn.Linear, MoeLoraLayer):
         nn.Linear.reset_parameters(self)
         self.update_layer(adapter_name, r, num_moe, gating, lora_alpha, lora_dropout, init_lora_weights)
         self.active_adapter = adapter_name
-        # 设置global_user_embeds
         self.global_user_embeds = global_user_embeds
-        # 设置gate_weights
         self.gate_weights = gate_weights
 
     def merge(self):
@@ -768,30 +747,18 @@ class Linear(nn.Linear, MoeLoraLayer):
             )
             self.merged = False
     
-    # 额外添加函数 功能:接受参数A_out,计算B_out
     def calculate_B(self, A_out):
         batch_size, seq_len, n, r = A_out.size()
         weight = self.lora_B[self.active_adapter].weight.t().reshape(n, r, -1)
         return torch.einsum('ijkl, klm->ijkm', A_out, weight)
 
 
-    # x: torch.Tensor
     def forward(self, x: torch.Tensor, **kwargs):
         flag = False
         # user_embeds = self.global_user_embeds[0]
-        # print(self.gate_weights)
         gate_weights = self.gate_weights[0]
-        # print("gate weights shape", gate_weights.shape)
-        # print("gate weights:", gate_weights)
-        # print("in forward from Linear:", user_embeds)
-        # print("user_embeds:", user_embeds)
         previous_dtype = x.dtype
-        # moe额外参数
         batch_size, seq_len, _ = x.size()
-        
-        """# 将 x 压缩到与 user_embeds 维度一致
-        compress_linear = torch.nn.Linear(x.size(-1), user_embeds.size(-1)).to(x.device)
-        x_compressed = compress_linear(x)"""
         
         try:
             if self.active_adapter not in self.lora_A.keys():
@@ -809,38 +776,16 @@ class Linear(nn.Linear, MoeLoraLayer):
                             ).reshape(batch_size, seq_len, self.num_moe[self.active_adapter], -1)
                 B_out = self.calculate_B(A_out)
                 
-                # !!!
                 # Gate = self.gating[self.active_adapter](user_embeds).unsqueeze(-1)
                 Gate = gate_weights.unsqueeze(-1)
                 
-                # Gate = self.gating[self.active_adapter](x_compressed).unsqueeze(-1)
                 
-                # 计算B_out和Gate的乘积,然后沿着倒数第二个维度求和,最后乘以self.scaling[self.active_adapter],将最终结果加到result上
                 result += ((B_out * Gate).sum(dim=-2) * self.scaling[self.active_adapter])
                 
-                """# 比照user_embeds与gate值
-                user_embeds_split = user_embeds.split(1, dim=0)
-                user_embed_vectors = [user_embed.squeeze() for user_embed in user_embeds_split]  # 去除第二个向量并去除多余的维度
-                gate_weights_squeezed = Gate.squeeze(-1)  # 去掉最后一个维度
-                gate_weights_split = gate_weights_squeezed.split(1, dim=0)  # 沿第一个维度分割
-                gate_weight_vectors = [x.squeeze() for x in gate_weights_split]  # 去除多余的维度
-                # 组合为字典
-                paired_dict = {f'gate_weight_{i+1}': gw.cpu().to(torch.float32).numpy() for i, gw in enumerate(gate_weight_vectors)}
-                paired_dict.update({f'user_embed_{i+1}': gw.cpu().to(torch.float32).numpy() for i, gw in enumerate(user_embed_vectors)})
-                # 以追加二进制模式打开文件
-                with open('/home/hexngroup/kongxy/LLaRA_MOE/data/emb&weight/appended_pickle.pkl', 'ab') as f:
-                    pickle.dump(paired_dict, f)"""
                 
-                gate_weights_squeezed = Gate.squeeze(-1)  # 去掉最后一个维度
-                gate_weights_split = gate_weights_squeezed.split(1, dim=0)  # 沿第一个维度分割
-                gate_weight_vectors = [x.squeeze() for x in gate_weights_split]  # 去除多余的维度
-
-                # 将每个 gate_weight_vector 追加到文件
-                """file_path = '/home/hexngroup/kongxy/LLaRA_MOE/data/emb&weight/gate.pkl'
-                with open(file_path, 'ab') as f:
-                    for gw in gate_weight_vectors:
-                        pickle.dump(gw.cpu().to(torch.float32).numpy(), f)"""
-                
+                gate_weights_squeezed = Gate.squeeze(-1)  
+                gate_weights_split = gate_weights_squeezed.split(1, dim=0) 
+                gate_weight_vectors = [x.squeeze() for x in gate_weights_split] 
                         
             else:
                 result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
@@ -850,9 +795,7 @@ class Linear(nn.Linear, MoeLoraLayer):
 
             return result
         except Exception as e:
-            # 捕获异常并打印错误信息
             print(f"An error occurred: {e}")
-            # 返回一个默认值或者其他处理方式
             return torch.zeros_like(x)  # 返回一个与输入张量相同形状的全零张量
 
 
@@ -1118,15 +1061,12 @@ if is_bnb_available():
             self.weight.requires_grad = False
             init_lora_weights = kwargs.pop("init_lora_weights", True)
             self.update_layer(adapter_name, r, num_moe, gating, loss_fn, lora_alpha, lora_dropout, init_lora_weights)
-            # 新添加
             # bnb.nn.Linear8bitLt.reset_parameters(self)
             
             self.update_layer(adapter_name, r, num_moe, gating, lora_alpha, lora_dropout, init_lora_weights)
             self.active_adapter = adapter_name
-            # 设置global_user_embeds
             self.global_user_embeds = global_user_embeds
         
-        # 额外添加函数 功能:接受参数A_out,计算B_out
         def calculate_B(self, A_out):
             # batch_size, seq_len, self.num_moe[self.active_adapter], -1
             batch_size, seq_len, n, r = A_out.size()
@@ -1137,7 +1077,6 @@ if is_bnb_available():
             user_embeds = self.global_user_embeds[0]
             result = super().forward(x)
             
-            # moe额外参数
             batch_size, seq_len, _ = x.size()
             
             if self.disable_adapters or self.active_adapter not in self.lora_A.keys():
@@ -1153,7 +1092,6 @@ if is_bnb_available():
                                 ).reshape(batch_size, seq_len, self.num_moe[self.active_adapter], -1)
                     B_out = self.calculate_B(A_out)
                     Gate = self.gating[self.active_adapter](user_embeds).unsqueeze(-1)
-                    # 计算B_out和Gate的乘积,然后沿着倒数第二个维度求和,最后乘以self.scaling[self.active_adapter],将最终结果加到result上
                     output = ((B_out * Gate).sum(dim=-2).to(expected_dtype) * self.scaling[self.active_adapter])
                         
                 else:
@@ -1162,7 +1100,6 @@ if is_bnb_available():
                         ).reshape(batch_size, seq_len, self.num_moe[self.active_adapter], -1)
                     B_out = self.calculate_B(A_out)
                     Gate = self.gating[self.active_adapter](user_embeds).unsqueeze(-1)
-                    # 计算B_out和Gate的乘积,然后沿着倒数第二个维度求和,最后乘以self.scaling[self.active_adapter],将最终结果加到result上
                     output = ((B_out * Gate).sum(dim=-2) * self.scaling[self.active_adapter])
                     
                 result += output
