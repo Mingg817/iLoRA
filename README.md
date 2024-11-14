@@ -10,7 +10,7 @@ cd iLoRA
 pip install -r requirements.txt
 ```
 
-2. Prepare the pre-trained huggingface model of LLaMA2-7B (https://huggingface.co/meta-llama/Llama-2-7b-hf).
+2. Prepare the pre-trained huggingface model of Llama2-7B (https://huggingface.co/meta-llama/Llama-2-7b-hf).
 3. Modify the paths inside the script.sh file.
 
 
