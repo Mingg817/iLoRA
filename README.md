@@ -10,11 +10,9 @@ cd iLoRA
 pip install -r requirements.txt
 ```
 
-2. Prepare the pre-trained huggingface model of LLaMA2-7B (https://huggingface.co/meta-llama/Llama-2-7b-hf).
-3. Download the data and checkpoints.
-4. Prepare the data and checkpoints:
+2. Prepare the pre-trained huggingface model of Llama2-7B (https://huggingface.co/meta-llama/Llama-2-7b-hf).
+3. Modify the paths inside the .sh file.
 
-Put the data to the dir path data/ref/ and the checkpoints to the dir path checkpoints/.
 
 #### Train iLoRA
 
