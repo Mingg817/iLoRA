@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ```
 
 2. Prepare the pre-trained huggingface model of Llama2-7B (https://huggingface.co/meta-llama/Llama-2-7b-hf).
-3. Modify the paths inside the script.sh file.
+3. Modify the paths inside the .sh file.
 
 
 #### Train iLoRA
