@@ -7,7 +7,7 @@ import torch.utils.data as data
 import pandas as pd
 import random
 
-class LastfmDataCtr(data.Dataset):
+class LastfmData(data.Dataset):
     def __init__(self, data_dir=r'data/ref/lastfm_ctr',
                  stage=None,
                  cans_num=10,
