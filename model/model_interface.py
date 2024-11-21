@@ -214,15 +214,10 @@ class MInterface(pl.LightningModule):
         df.to_csv(op.join(self.hparams.output_dir, 'test.csv'))
         prediction_valid_ratio,hr=self.calculate_hr1(self.test_content)
         metric=hr*prediction_valid_ratio
-        
-        ctr = self.calculate_ctr(self.test_content)
-        
+
         self.log('test_prediction_valid', prediction_valid_ratio, on_step=False, on_epoch=True, prog_bar=True)
         self.log('test_hr', hr, on_step=False, on_epoch=True, prog_bar=True)
         self.log('metric', metric, on_step=False, on_epoch=True, prog_bar=True)
-        
-        self.log('ctr', ctr, on_step=False, on_epoch=True, prog_bar=True)
-
 
     def configure_optimizers(self):
         if hasattr(self.hparams, 'weight_decay'):

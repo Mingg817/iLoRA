@@ -39,14 +39,11 @@ class LastfmDataCtr(data.Dataset):
             'correct_answer': temp['next_item_name']
         }
         return sample
-    
-    # 负采样 -> random采样唯一一个负样本
+
     def negative_sampling(self,seq_unpad,next_item):
-        # 全体canset: 除了seq_unpad和next_item
         canset=[i for i in list(self.item_id2name.keys()) if i not in seq_unpad and i!=next_item]
-        # 随机选择  self.cans_num-1 个负样本
         candidates=random.sample(canset, 1)
-        return candidates  
+        return candidates
 
     def check_files(self):
         self.item_id2name=self.get_music_id2name()
@@ -59,8 +56,7 @@ class LastfmDataCtr(data.Dataset):
         data_path=op.join(self.data_dir, filename)
         self.session_data = self.session_data4frame(data_path, self.item_id2name)  
 
-    
-    # 从id2name读取数据创建字典    
+
     def get_music_id2name(self):
         music_id2name = dict()
         item_path=op.join(self.data_dir, 'id2name.txt')
@@ -69,12 +65,10 @@ class LastfmDataCtr(data.Dataset):
                 ll = l.strip('\n').split('::')
                 music_id2name[int(ll[0])] = ll[1].strip()
         return music_id2name
-    
-    # id序列 -> unpad名称 增添train_data['seq_title']与['next_item_name']
+
     def session_data4frame(self, datapath, music_id2name):
         train_data = pd.read_pickle(datapath)
         train_data = train_data[train_data['len_seq'] >= 3]
-        # 移除序列中的填充项
         def remove_padding(xx):
             x = xx[:]
             for i in range(10):
@@ -84,7 +78,6 @@ class LastfmDataCtr(data.Dataset):
                     break
             return x
         train_data['seq_unpad'] = train_data['seq'].apply(remove_padding)
-        # id转换为名称
         def seq_to_title(x): 
             return [music_id2name[x_i] for x_i in x]
         train_data['seq_title'] = train_data['seq_unpad'].apply(seq_to_title)
