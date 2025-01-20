@@ -38,7 +38,7 @@ Note that: set the `llm_path` argument with your own directory path of the Llama
 
 If you encounter an error with your transformers/generation/utils.py file, please replace it with the debug/utils.py file we have provided in your environment.
 
-If you encounter an error with your transformers/models/llama/modeling_llama.py file, please replace it with the debug/modeling_llama.py file we have provided in your environment.
+If you encounter an error with your transformers/models/llama/modeling_llama.py file, please replace it with the debug/modeling_llama.py file.
 ##### Evaluate iLoRA
 
 Test iLoRA with a single A100 GPU on MovieLens dataset:
