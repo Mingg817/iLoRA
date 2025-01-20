@@ -36,9 +36,14 @@ sh train_lastfm.sh
 
 Note that: set the `llm_path` argument with your own directory path of the Llama2 model.
 
+### For the environmental issues mentioned by everyone during the reproduction process, we have attempted to help resolve them and have listed some solutions:
+
 If you encounter an error with your transformers/generation/utils.py file, please replace it with the debug/utils.py file we have provided in your environment.
 
 If you encounter an error with your transformers/models/llama/modeling_llama.py file, please replace it with the debug/modeling_llama.py file.
+
+Thank you all for your attention to our work! Wishing you success in your research.
+
 ##### Evaluate iLoRA
 
 Test iLoRA with a single A100 GPU on MovieLens dataset:
