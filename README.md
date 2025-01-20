@@ -36,7 +36,7 @@ sh train_lastfm.sh
 
 Note that: set the `llm_path` argument with your own directory path of the Llama2 model.
 
-### For the environmental issues mentioned by everyone during the reproduction process, we have attempted to help resolve them and have listed some solutions:
+##### For the environmental issues mentioned by everyone during the reproduction process, we have attempted to help resolve them and have listed some solutions:
 
 If you encounter an error with your transformers/generation/utils.py file, please replace it with the debug/utils.py file we have provided in your environment.
 
