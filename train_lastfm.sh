@@ -1,5 +1,4 @@
 python main.py \
---mode train.py\
 --mode train \
 --router share \
 --gating Dense \
