@@ -315,7 +315,7 @@ class MInterface(pl.LightningModule):
         self.llama_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.llama_tokenizer.padding_side = "right"
         self.llama_tokenizer.add_special_tokens({'additional_special_tokens': ['[PH]','[HistoryEmb]','[CansEmb]','[ItemEmb]']})
-        self.llama_model = LlamaForCausalLM.from_pretrained(llm_path,torch_dtype=torch.bfloat16)
+        self.llama_model = LlamaForCausalLM.from_pretrained(llm_path, torch_dtype=torch.bfloat16, load_in_8bit=True, device_map="auto")
         self.llama_model.resize_token_embeddings(len(self.llama_tokenizer))
         if self.hparams.llm_tuning == 'lora':
             if self.hparams.peft_dir:
