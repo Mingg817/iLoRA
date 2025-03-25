@@ -10,7 +10,7 @@ python main.py \
 --prompt_path ./prompt/game.txt \
 --rec_embed SASRec \
 --llm_tuning moelora \
---llm_path xxx \
+--llm_path $LLM_PATH \
 --rec_model_path ./rec_model/steam.pt \
 --ckpt_dir ./checkpoints/steam/ \
 --output_dir ./output/steam/ \

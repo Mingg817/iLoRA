@@ -10,7 +10,7 @@ python main.py \
 --prompt_path ./prompt/movie.txt \
 --rec_embed SASRec \
 --llm_tuning moelora \
---llm_path xxx \
+--llm_path $LLM_PATH \
 --rec_model_path ./rec_model/movielens.pt \
 --ckpt_dir ./checkpoints/movielens/ \
 --output_dir ./output/movielens/ \
