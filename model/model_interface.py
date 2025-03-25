@@ -224,7 +224,7 @@ class MInterface(pl.LightningModule):
             weight_decay = self.hparams.weight_decay
         else:
             weight_decay = 0
-        optimizer = torch.optim.Adam([
+        optimizer = torch.optim.SGD([
             {'params': self.projector.parameters(), 'lr': self.hparams.lr, 'weight_decay':weight_decay},
             
             {'params': self.router.parameters(), 'lr': self.hparams.lr * 0.3, 'weight_decay':weight_decay},
@@ -315,7 +315,7 @@ class MInterface(pl.LightningModule):
         self.llama_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.llama_tokenizer.padding_side = "right"
         self.llama_tokenizer.add_special_tokens({'additional_special_tokens': ['[PH]','[HistoryEmb]','[CansEmb]','[ItemEmb]']})
-        self.llama_model = LlamaForCausalLM.from_pretrained(llm_path,torch_dtype=torch.bfloat16)
+        self.llama_model = LlamaForCausalLM.from_pretrained(llm_path, device_map="auto",load_in_8bit=True)
         self.llama_model.resize_token_embeddings(len(self.llama_tokenizer))
         if self.hparams.llm_tuning == 'lora':
             if self.hparams.peft_dir:

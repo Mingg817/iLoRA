@@ -1048,19 +1048,14 @@ if is_bnb_available():
                 self,
                 in_features,
                 out_features,
-                """bias=kwargs.get("bias", True),
-                has_fp16_weights=kwargs.get("has_fp16_weights", True),
-                memory_efficient_backward=kwargs.get("memory_efficient_backward", False),
-                threshold=kwargs.get("threshold", 0.0),
-                index=kwargs.get("index", None),"""
-                **kwargs
+                # **kwargs
             )
             MoeLoraLayer.__init__(self, in_features=in_features, out_features=out_features)
 
             # Freezing the pre-trained weight matrix
             self.weight.requires_grad = False
             init_lora_weights = kwargs.pop("init_lora_weights", True)
-            self.update_layer(adapter_name, r, num_moe, gating, loss_fn, lora_alpha, lora_dropout, init_lora_weights)
+            # self.update_layer(adapter_name, r, num_moe, gating, loss_fn, lora_alpha, lora_dropout, init_lora_weights)
             # bnb.nn.Linear8bitLt.reset_parameters(self)
             
             self.update_layer(adapter_name, r, num_moe, gating, lora_alpha, lora_dropout, init_lora_weights)

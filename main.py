@@ -106,7 +106,7 @@ if __name__ == '__main__':
     
     parser.add_argument('--rec_size', default=64, type=int)
     parser.add_argument('--padding_item_id', default=3581, type=int)
-    parser.add_argument('--llm_path', default='/home/hexngroup/kongxy/llama2_7b_hf', type=str)
+    parser.add_argument('--llm_path', default='meta-llama/Llama-2-7b-hf', type=str)
     parser.add_argument('--rec_model_path', default='LLaRA_MOE/rec_model/SASRec_steam.pt', type=str)
     parser.add_argument('--prompt_path', default='LLaRA_MOE/prompt/game.txt', type=str)
     parser.add_argument('--output_dir', default='LLaRA_MOE/output/steam_moe/', type=str)
